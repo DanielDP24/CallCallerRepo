@@ -8,6 +8,17 @@ use Twilio\TwiML\VoiceResponse;
 
 class CallController extends Controller
 {
+    public $RandInf = []; // Inicializar el array
+
+    public function __construct()
+    {
+        $this->RandInf = [
+            $this->returnName(),
+            $this->returnEmail(),
+            $this->returnCompany()
+        ];
+    }
+
     public function SayName()
     {
 
@@ -29,7 +40,7 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say('Daniel Jesús', [
+        $gather->say($this->RandInf[0], [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
@@ -39,7 +50,6 @@ class CallController extends Controller
 
         return response($response)->header('Content-Type', 'text/xml');
     }
-
     public function SayYes()
     {
         Log::info('6 sec para el si');
@@ -68,7 +78,6 @@ class CallController extends Controller
 
         return response($response)->header('Content-Type', 'text/xml');
     }
-
     public function SayEmail()
     {
 
@@ -87,7 +96,7 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say('de dominguez arroba airzone control punto com', [
+        $gather->say($this->RandInf[1], [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
@@ -143,7 +152,7 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say('Corporación Empresarial Altra ', [
+        $gather->say($this->RandInf[2], [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
@@ -161,7 +170,7 @@ class CallController extends Controller
         $response->pause(['length' => 5]);
         Log::info('decimos company');
 
-       
+
         $response->say('Si ', [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
@@ -172,5 +181,55 @@ class CallController extends Controller
 
         return response($response)->header('Content-Type', 'text/xml');
     }
+    public function returnName(): string
+    {
+        $filePath = public_path('Nombres.txt');
+        if (!file_exists($filePath)) {
+            return "Archivo no encontrado";
+        }
 
+        $content = file_get_contents($filePath);
+        $names = array_map('trim', explode(',', $content));
+
+        if (empty($names)) {
+            return "No hay nombres en el archivo";
+        }
+
+        return $names[array_rand($names)];
+    }
+    public function returnCompany(): string
+    {
+        $filePath = public_path('Empresas.txt');
+
+        if (!file_exists($filePath)) {
+            return "Archivo no encontrado";
+        }
+
+        $content = file_get_contents($filePath);
+        $companies = array_map('trim', explode(',', $content));
+
+        if (empty($companies)) {
+            return "No hay empresas en el archivo";
+        }
+
+        return $companies[array_rand($companies)];
+    }
+    public function returnEmail(): string
+    {
+        $filePath = public_path('Emails.txt');
+
+
+        if (!file_exists($filePath)) {
+            return "Archivo no encontrado";
+        }
+
+        $content = file_get_contents($filePath);
+        $emails = array_map('trim', explode(',', $content));
+
+        if (empty($emails)) {
+            return "No hay emails en el archivo";
+        }
+
+        return $emails[array_rand($emails)];
+    }
 }
