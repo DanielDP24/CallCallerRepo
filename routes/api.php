@@ -9,3 +9,4 @@ Route::post("/SayYes", [CallController::class, 'SayYes']);
 Route::post("/SayEmail", [CallController::class, 'SayEmail']);
 Route::post("/SayYesEmail", [CallController::class, 'SayYesEmail']);
 Route::post("/SayCompany", [CallController::class, 'SayCompany']);
+Route::post("/SayYesCompany", [CallController::class, 'SayYesCompany']);

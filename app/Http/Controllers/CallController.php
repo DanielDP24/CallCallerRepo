@@ -9,27 +9,27 @@ use Twilio\TwiML\VoiceResponse;
 class CallController extends Controller
 {
     public $RandInf = []; // Inicializar el array
+    public string $filePath;
 
     public function __construct()
     {
-        $this->RandInf = [
-            $this->returnName(),
-            $this->returnEmail(),
-            $this->returnCompany()
-        ];
+        $this->RandInf = [];
+        $this->filePath = '/home/ddominguez/projects/Results.txt';
     }
 
     public function SayName()
     {
 
-
+        $name = $this->returnName();
+        file_put_contents($this->filePath, "\n". 'Empezamos llamada'."\n". ' - ' .$name . "\n", FILE_APPEND);
+                
+        
         $response = new VoiceResponse();
 
         // Introduce a delay of 8.5 seconds
         sleep(8.5);
 
         // Say "Daniel"
-        Log::info('Decimos el nombre');
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
@@ -40,19 +40,16 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say($this->RandInf[0], [
+        $gather->say($name, [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
         ]);
-
-        Log::info('Terminando SayName, pasará a SayYes');
-
+        Log::info('Decimos el nombre');
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayYes()
     {
-        Log::info('6 sec para el si');
 
         $response = new VoiceResponse();
 
@@ -74,17 +71,19 @@ class CallController extends Controller
             'rate' => '1'
         ]);
 
-        Log::info('hemos dicho si');
+        Log::info('hemos dicho si al nombre');
 
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayEmail()
     {
 
+        $email = $this->returnEmail();
+        file_put_contents($this->filePath, ' - ' .$email . "\n", FILE_APPEND);
+                
         $response = new VoiceResponse();
 
         $response->pause(['length' => 6]);
-        Log::info('decimos email');
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -96,19 +95,19 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say($this->RandInf[1], [
+        $gather->say($email, [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
-        ]);
+        ]);       
+        Log::info('decimos email');
 
-        Log::info('hemos dicho el email');
+
 
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayYesEmail()
     {
-        Log::info('6 sec para el si');
 
         $response = new VoiceResponse();
 
@@ -130,54 +129,62 @@ class CallController extends Controller
             'rate' => '1'
         ]);
 
-        Log::info('hemos dicho si');
+        Log::info('hemos dicho si al email');
 
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayCompany()
     {
 
+        $company = $this->returnCompany();
+        file_put_contents($this->filePath,  ' - ' . $company. "\n", FILE_APPEND);
+                
+        
         $response = new VoiceResponse();
 
         $response->pause(['length' => 5]);
-        Log::info('decimos company');
 
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayYes'),
+            'action'        => url('/api/SayYesCompany'),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
             'speechTimeout' => '1',
         ]);
 
-        $gather->say($this->RandInf[2], [
+        $gather->say($company, [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
         ]);
-
-        Log::info('Hemos dicho company');
+        Log::info('decimos company');
 
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayYesCompany()
     {
-
         $response = new VoiceResponse();
 
         $response->pause(['length' => 5]);
-        Log::info('decimos company');
 
+        $gather = $response->gather([
+            'input'         => 'speech',
+            'timeout'       => '13',
+            'action'        => url('/api/SayYesCompany'),
+            'method'        => 'POST',
+            'language'      => 'es-ES',
+            'speechModel'   => 'googlev2_short',
+            'speechTimeout' => '1',
+        ]);
 
-        $response->say('Si ', [
+        $gather->say('Si', [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
         ]);
-
-        Log::info('Hemos dicho company');
+        Log::info('Hemos dicho si a company');
 
         return response($response)->header('Content-Type', 'text/xml');
     }
