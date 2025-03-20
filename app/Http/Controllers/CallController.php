@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SayYesJob;
+use Illuminate\Http\Request;
 use Twilio\TwiML\VoiceResponse;
 
 class CallController extends Controller
@@ -14,16 +15,14 @@ class CallController extends Controller
     public function __construct()
     {
         $this->RandInf = [];
-        $this->filePath = '/home/ddominguez/projects/Results.txt';
+        $this->filePath = '/home/ddominguez/projects/Results.csv';
     }
 
-    public function SayName()
+    public function SayName(Request $request)
     {
-
         $name = $this->returnName();
-        file_put_contents($this->filePath, "\n". 'Empezamos llamada'."\n". ' - ' .$name . "\n", FILE_APPEND);
-                
-        
+
+
         $response = new VoiceResponse();
 
         // Introduce a delay of 8.5 seconds
@@ -33,7 +32,10 @@ class CallController extends Controller
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayYes'),
+            'action'        => url()->query("/api/SayYes", [
+                'uuid' => $request->input('uuid'),
+                'name' => $name
+            ]),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
@@ -48,17 +50,18 @@ class CallController extends Controller
         Log::info('Decimos el nombre');
         return response($response)->header('Content-Type', 'text/xml');
     }
-    public function SayYes()
+    public function SayYes(Request $request)
     {
-
         $response = new VoiceResponse();
-
         $response->pause(['length' => 6]);
 
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayEmail'),
+            'action'        => url()->query("/api/SayEmail", [
+                'uuid' => $request->input('uuid'),
+                'name' => $request->input('name')
+            ]),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
@@ -75,12 +78,11 @@ class CallController extends Controller
 
         return response($response)->header('Content-Type', 'text/xml');
     }
-    public function SayEmail()
+    public function SayEmail(Request $request)
     {
-
         $email = $this->returnEmail();
-        file_put_contents($this->filePath, ' - ' .$email . "\n", FILE_APPEND);
-                
+        file_put_contents($this->filePath, ' - ' . $email . "\n", FILE_APPEND);
+
         $response = new VoiceResponse();
 
         $response->pause(['length' => 6]);
@@ -88,7 +90,11 @@ class CallController extends Controller
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayYesEmail'),
+            'action'        => url()->query("/api/SayYesEmail", [
+                'uuid' => $request->input('uuid'),
+                'name' => $request->input('name'),
+                'email' => $email
+            ]),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
@@ -99,16 +105,15 @@ class CallController extends Controller
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
-        ]);       
+        ]);
         Log::info('decimos email');
 
 
 
         return response($response)->header('Content-Type', 'text/xml');
     }
-    public function SayYesEmail()
+    public function SayYesEmail(Request $request)
     {
-
         $response = new VoiceResponse();
 
         $response->pause(['length' => 6]);
@@ -116,7 +121,11 @@ class CallController extends Controller
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayCompany'),
+            'action'        => url()->query("/api/SayCompany", [
+                'uuid' => $request->input('uuid'),
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+            ]),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
@@ -133,13 +142,10 @@ class CallController extends Controller
 
         return response($response)->header('Content-Type', 'text/xml');
     }
-    public function SayCompany()
+    public function SayCompany(Request $request)
     {
 
         $company = $this->returnCompany();
-        file_put_contents($this->filePath,  ' - ' . $company. "\n", FILE_APPEND);
-                
-        
         $response = new VoiceResponse();
 
         $response->pause(['length' => 5]);
@@ -147,7 +153,12 @@ class CallController extends Controller
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayYesCompany'),
+            'action'        => url()->query("/api/SayYesCompany", [
+                'uuid' => $request->input('uuid'),
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'company' => $company,
+            ]),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
@@ -163,16 +174,31 @@ class CallController extends Controller
 
         return response($response)->header('Content-Type', 'text/xml');
     }
-    public function SayYesCompany()
+    public function SayYesCompany(Request $request)
     {
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 5]);
+        $response->pause(['length' => 4]);
+
+        $url = url()->query("/api/SayYesCompany", [
+            'uuid' => $request->input('uuid'),
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'company' => $request->input('company'),
+        ]);
+
+
+        Log::info("información ULTIMA URL -> $url");
 
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url('/api/SayYesCompany'),
+            'action'        => url()->query("http://54.247.29.41:8000/api/CreateJson", [
+                'uuid' => $request->input('uuid'),
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'company' => $request->input('company'),
+            ]),
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
