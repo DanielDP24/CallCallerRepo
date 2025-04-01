@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
-use App\Jobs\SayYesJob;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Twilio\TwiML\VoiceResponse;
 
 class CallController extends Controller
@@ -85,7 +85,7 @@ class CallController extends Controller
 
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 6]);
+        $response->pause(['length' => 8.5]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -116,7 +116,7 @@ class CallController extends Controller
     {
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 6]);
+        $response->pause(['length' => 4]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -132,7 +132,7 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say('Si', [
+        $gather->say('Si, es correcto, si es correcto, si es correcto', [
             'language' => 'es-ES',
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
@@ -148,7 +148,7 @@ class CallController extends Controller
         $company = $this->returnCompany();
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 5]);
+        $response->pause(['length' => 3]);
 
         $gather = $response->gather([
             'input'         => 'speech',

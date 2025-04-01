@@ -15,15 +15,15 @@ class RealizarLlamada extends Command
     {
         $sid = config("services.twilio.sid");
         $token = config("services.twilio.token");
-        $uuid = uuid_create();
+        // $uuid = uuid_create();
         $twilio = new Client($sid, $token);
 
         $twilio->calls->create(
-            
-            "+34951798775",//from
-            "+34951794023",
+
+            "+34951798775", //from
+            "+34951794023", //to
             [
-                "url" => "http://54.247.29.41:8001/api/SayName?uuid=". $uuid,
+                "url" => "http://54.247.29.41:8001/api/SayName?uuid="
             ]
         );
         Log::info('llamada realizada');
