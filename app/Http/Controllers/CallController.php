@@ -29,7 +29,7 @@ class CallController extends Controller
     {
         $name = strtolower($this->returnName());
 
-
+        Log::info(json_encode($name));
         $response = new VoiceResponse();
 
         // Introduce a delay of 8.5 seconds
@@ -197,7 +197,7 @@ class CallController extends Controller
         $company =  strtolower($this->returnCompany());
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 3]);
+        $response->pause(['length' => 4]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -213,6 +213,7 @@ class CallController extends Controller
             'speechModel'   => 'googlev2_short',
             'speechTimeout' => '1',
         ]);
+        Log::info(json_encode($company));
 
         $gather->say($company, [
             'language' => 'es-ES',
