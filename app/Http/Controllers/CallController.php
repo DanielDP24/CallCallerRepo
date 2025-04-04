@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Http;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Prism;
 use Prism\Prism\Schema\ObjectSchema;
@@ -25,11 +26,21 @@ class CallController extends Controller
         $this->uuid = request()->input('uuid', '');
     }
 
+    public function saveData($key, $value)
+    {
+        Http::post('http://54.247.29.41:8000/api/saveCallData', [
+            'key' => $key,
+            'value' => $value
+        ]);
+    }
+
     public function SayName(Request $request)
     {
         $name = strtolower($this->returnName());
 
-        Log::info(json_encode($name));
+        $this->saveData('name_given', $name);
+        Log::info("Entra en second vacio name " . $name);
+
         $response = new VoiceResponse();
 
         // Introduce a delay of 8.5 seconds
@@ -60,7 +71,7 @@ class CallController extends Controller
     public function SayYes(Request $request)
     {
         $response = new VoiceResponse();
-        $response->pause(['length' => 6]);
+        $response->pause(['length' => 5]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -89,19 +100,27 @@ class CallController extends Controller
     {
         $email =  strtolower($this->returnEmail());
         file_put_contents($this->filePath, ' - ' . $email . "\n", FILE_APPEND);
+        $second = $request->input('second') ?? '';
 
-        $schema = new ObjectSchema(
-            name: 'email_transcription',
-            description: 'Structured email transcription',
-            properties: [
-                new StringSchema('readable_email', 'Email formatted for text-to-speech readability')
-            ],
-            requiredFields: ['readable_email']
-        );
+        //si está lleno 
+        if (!empty($second)) {
+            $email = strtolower($request->input('email_given'));
+            Log::info("Entra en second lleno email " . $email);
+        } else {
+            Log::info("Entra en second vacio email " . $email);
 
-        //LÓGICA DE CORECCIÓN DE EMAIL AI
+            $schema = new ObjectSchema(
+                name: 'email_transcription',
+                description: 'Structured email transcription',
+                properties: [
+                    new StringSchema('readable_email', 'Email formatted for text-to-speech readability')
+                ],
+                requiredFields: ['readable_email']
+            );
 
-        $prompt = <<<EOT
+            //LÓGICA DE CORECCIÓN DE EMAIL AI
+
+            $prompt = <<<EOT
         You are an advanced email transcription proofreader.
         Your job is to convert this email into a readable email, for example.
         
@@ -122,16 +141,19 @@ class CallController extends Controller
 
         The provided email snippet: "$email"
         EOT;
-        Log::info(json_encode($email));
+            Log::info(json_encode($email));
 
-        $response = Prism::structured()
-        ->using(Provider::OpenAI, 'gpt-4o-mini')
-        ->withSchema($schema)
-        ->withPrompt($prompt)
-        ->asStructured();
-        Log::info(json_encode($response->structured, JSON_PRETTY_PRINT));
+            $response = Prism::structured()
+                ->using(Provider::OpenAI, 'gpt-4o-mini')
+                ->withSchema($schema)
+                ->withPrompt($prompt)
+                ->asStructured();
+            Log::info(json_encode($response->structured, JSON_PRETTY_PRINT));
 
-        $email = $response->structured['readable_email'];
+            $email = $response->structured['readable_email'];
+            $this->saveData('email_given', $email);
+        }
+
 
         $response = new VoiceResponse();
 
@@ -197,7 +219,14 @@ class CallController extends Controller
         $company =  strtolower($this->returnCompany());
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 4]);
+        if (!empty($second)) {
+            $company = strtolower($request->input('company_given'));
+            Log::info("Entra en second lleno company " . $company);
+        } else {
+            $this->saveData('company_given', $company);
+            Log::info("Entra en second vacio company " . $company);
+        }
+        $response->pause(['length' => 5]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -228,27 +257,12 @@ class CallController extends Controller
     {
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 4]);
-
-        $url = url()->query("/api/SayYesCompany", [
-            'uuid' => $request->input('uuid'),
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'company' => $request->input('company'),
-        ]);
-
-
-        Log::info("información ULTIMA URL -> $url");
+        $response->pause(['length' => 5]);
 
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
-            'action'        => url()->query("http://54.247.29.41:8000/api/CreateJson", [
-                'uuid' => $request->input('uuid'),
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'company' => $request->input('company'),
-            ]),
+            'action'        => '',
             'method'        => 'POST',
             'language'      => 'es-ES',
             'speechModel'   => 'googlev2_short',
@@ -341,24 +355,5 @@ class CallController extends Controller
 
         // Seleccionar un nombre aleatorio
         return $emails[array_rand($emails)];
-    }
-
-    public function getCallData(string $key): ?string
-    {
-        $dataAsJson = Cache::get("twilio_call_$this->uuid", '{}');
-        $data = json_decode($dataAsJson, true);
-
-        return $data[$key] ?? null;
-    }
-    private function saveCallData(string $key, string $value): void
-    {
-        $dataAsJson = Cache::get("twilio_call_$this->uuid", '{}');
-        $data = json_decode(json: $dataAsJson, associative: true);
-        Log::info("Guardamos $key --- $value");
-
-        $data[$key] = $value;
-        $dataAsJson = json_encode(value: $data);
-
-        Cache::put("twilio_call_$this->uuid", $dataAsJson);
     }
 }
