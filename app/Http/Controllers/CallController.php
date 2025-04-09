@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Http;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Prism;
 use Prism\Prism\Schema\ObjectSchema;
@@ -18,27 +16,20 @@ class CallController extends Controller
     public $RandInf = []; // Inicializar el array
     public string $filePath;
     private string $uuid;
+   
 
-    public function __construct()
+    public function __construct(private DatabaseController $DatabaseController)
     {
         $this->RandInf = [];
         $this->filePath = '/home/ddominguez/projects/Results.csv';
         $this->uuid = request()->input('uuid', '');
     }
 
-    public function saveData($key, $value)
-    {
-        Http::post('http://54.247.29.41:8000/api/saveCallData', [
-            'key' => $key,
-            'value' => $value
-        ]);
-    }
-
     public function SayName(Request $request)
     {
         $name = strtolower($this->returnName());
 
-        $this->saveData('name_given', $name);
+        $this->DatabaseController->insertField('name_given', $name);
         Log::info("Entra en second vacio name " . $name);
 
         $response = new VoiceResponse();
@@ -99,6 +90,8 @@ class CallController extends Controller
     public function SayEmail(Request $request)
     {
         $email =  strtolower($this->returnEmail());
+        $this->DatabaseController->insertField('email_given', $email);
+
         file_put_contents($this->filePath, ' - ' . $email . "\n", FILE_APPEND);
         $second = $request->input('second') ?? '';
 
@@ -151,7 +144,6 @@ class CallController extends Controller
             Log::info(json_encode($response->structured, JSON_PRETTY_PRINT));
 
             $email = $response->structured['readable_email'];
-            $this->saveData('email_given', $email);
         }
 
 
@@ -223,7 +215,7 @@ class CallController extends Controller
             $company = strtolower($request->input('company_given'));
             Log::info("Entra en second lleno company " . $company);
         } else {
-            $this->saveData('company_given', $company);
+            $this->DatabaseController->insertField('company_given', $company);
             Log::info("Entra en second vacio company " . $company);
         }
         $response->pause(['length' => 5]);
@@ -280,7 +272,7 @@ class CallController extends Controller
     }
     public function returnName(): string
     {
-        
+
         $filePath = public_path('ClientesIberia_Limpio.json');
 
         if (!file_exists($filePath)) {
