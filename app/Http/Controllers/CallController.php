@@ -16,7 +16,7 @@ class CallController extends Controller
     public $RandInf = []; // Inicializar el array
     public string $filePath;
     private string $uuid;
-   
+
 
     public function __construct(private DatabaseController $DatabaseController)
     {
@@ -30,14 +30,12 @@ class CallController extends Controller
         $name = strtolower($this->returnName());
 
         $this->DatabaseController->insertField('name_given', $name);
-        Log::info("Entra en second vacio name " . $name);
 
         $response = new VoiceResponse();
 
         // Introduce a delay of 8.5 seconds
         sleep(8.5);
 
-        // Say "Daniel"
         $gather = $response->gather([
             'input'         => 'speech',
             'timeout'       => '13',
@@ -56,7 +54,7 @@ class CallController extends Controller
             'voice' => 'Polly.Lucia-Neural',
             'rate' => '1'
         ]);
-        Log::info('Decimos el nombre');
+        Log::info('Decimos el nombre' . $name);
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayYes(Request $request)
@@ -98,9 +96,7 @@ class CallController extends Controller
         //si está lleno 
         if (!empty($second)) {
             $email = strtolower($request->input('email_given'));
-            Log::info("Entra en second lleno email " . $email);
         } else {
-            Log::info("Entra en second vacio email " . $email);
 
             $schema = new ObjectSchema(
                 name: 'email_transcription',
@@ -116,10 +112,12 @@ class CallController extends Controller
             $prompt = <<<EOT
         You are an advanced email transcription proofreader.
         Your job is to convert this email into a readable email, for example.
-        
+        Its VERY IMPORTANT not to create any word to complete or improve the email, just convert the words given, but NEVER invent ANY WORD not given by the user.
+
         - Replace symbols with their correct spoken words:
           - "@" → "arroba"
           - ".com" → "punto com" 
+          - "." → "punto"
           - etc
        
         **Your Task Generate a Readable Version for TTS**
@@ -130,20 +128,25 @@ class CallController extends Controller
         
         **Example Output:**
         -   If the email provided is= "ddominguez@airzonecontrol.com"
-            You should return= " e domínguez arroba airzone control punto com"
+            You should return= "de domínguez arroba airzone control punto com"
+        -   If the email provided is= "cielo_azul@cieloazul.org"
+            You should return= "cielo barra baja azul arroba cielo azul punto o erre ge"
+        -   If the email provided is= "jesusgonzalez@ijg.es"
+            You should return= "jesus gonzalez arroja i jota ge punto es"
 
         The provided email snippet: "$email"
         EOT;
-            Log::info(json_encode($email));
 
             $response = Prism::structured()
-                ->using(Provider::OpenAI, 'gpt-4o-mini')
+                ->using(Provider::OpenAI, 'gpt-4o')
                 ->withSchema($schema)
                 ->withPrompt($prompt)
                 ->asStructured();
             Log::info(json_encode($response->structured, JSON_PRETTY_PRINT));
 
             $email = $response->structured['readable_email'];
+            Log::info("decimos email $email XXXXXXXXXXXXXXXXXXXXX");
+
         }
 
 
@@ -213,10 +216,8 @@ class CallController extends Controller
 
         if (!empty($second)) {
             $company = strtolower($request->input('company_given'));
-            Log::info("Entra en second lleno company " . $company);
         } else {
             $this->DatabaseController->insertField('company_given', $company);
-            Log::info("Entra en second vacio company " . $company);
         }
         $response->pause(['length' => 5]);
 
@@ -234,7 +235,6 @@ class CallController extends Controller
             'speechModel'   => 'googlev2_short',
             'speechTimeout' => '1',
         ]);
-        Log::info(json_encode($company));
 
         $gather->say($company, [
             'language' => 'es-ES',
