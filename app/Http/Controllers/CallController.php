@@ -142,7 +142,7 @@ class CallController extends Controller
                 ->withSchema($schema)
                 ->withPrompt($prompt)
                 ->asStructured();
-            Log::info(json_encode($response->structured, JSON_PRETTY_PRINT));
+           
 
             $email = $response->structured['readable_email'];
             Log::info("decimos email $email XXXXXXXXXXXXXXXXXXXXX");
