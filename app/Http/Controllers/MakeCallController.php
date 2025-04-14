@@ -1,17 +1,14 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Http\Controllers;
 
-use Illuminate\Console\Command;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Twilio\Rest\Client;
 
-class RealizarLlamada extends Command
+class MakeCallController extends Controller
 {
-    protected $signature = 'twilio:call';
-    protected $description = 'Realiza una llamada usando Twilio';
-
-    public function handle()
+    public function realizarLlamada()
     {
         $sid = config("services.twilio.sid");
         $token = config("services.twilio.token");
@@ -26,5 +23,5 @@ class RealizarLlamada extends Command
                 "url" => "http://54.247.29.41:8001/api/SayName?uuid=$uuid"
             ]
         );
-    }
-}
+        dd($result);
+    }}

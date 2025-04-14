@@ -130,7 +130,7 @@ class CallController extends Controller
         -   If the email provided is= "ddominguez@airzonecontrol.com"
             You should return= "de domínguez arroba airzone control punto com"
         -   If the email provided is= "cielo_azul@cieloazul.org"
-            You should return= "cielo barra baja azul arroba cielo azul punto o erre ge"
+            You should return= "cielo _ azul arroba cielo azul punto o erre ge"
         -   If the email provided is= "jesusgonzalez@ijg.es"
             You should return= "jesus gonzalez arroja i jota ge punto es"
 
