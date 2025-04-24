@@ -53,7 +53,7 @@ class TwilioService
     {
         return [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ];
     }

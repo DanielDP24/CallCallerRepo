@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller as ControllersController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -34,7 +35,7 @@ class CallController extends Controller
         $response = new VoiceResponse();
 
         // Introduce a delay of 8.5 seconds
-        sleep(8.5);
+        sleep(10);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -51,7 +52,7 @@ class CallController extends Controller
 
         $gather->say($name, [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
         Log::info('Decimos el nombre' . $name);
@@ -75,9 +76,9 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say('Si', [
+        $gather->say('Si, es correcto', [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
 
@@ -110,32 +111,32 @@ class CallController extends Controller
             //LÓGICA DE CORECCIÓN DE EMAIL AI
 
             $prompt = <<<EOT
-        You are an advanced email transcription proofreader.
-        Your job is to convert this email into a readable email, for example.
-        Its VERY IMPORTANT not to create any word to complete or improve the email, just convert the words given, but NEVER invent ANY WORD not given by the user.
-
-        - Replace symbols with their correct spoken words:
-          - "@" → "arroba"
-          - ".com" → "punto com" 
-          - "." → "punto"
-          - etc
-       
-        **Your Task Generate a Readable Version for TTS**
-        - Convert the email into a version optimized for text-to-speech (TTS):
-          - The "@" symbol should be spoken as "arroba".
-          - The ".com" should be spoken as "punto com".
-          - The username and domain should be spaced clearly to enhance pronunciation.
-        
-        **Example Output:**
-        -   If the email provided is= "ddominguez@airzonecontrol.com"
-            You should return= "de domínguez arroba airzone control punto com"
-        -   If the email provided is= "cielo_azul@cieloazul.org"
-            You should return= "cielo _ azul arroba cielo azul punto o erre ge"
-        -   If the email provided is= "jesusgonzalez@ijg.es"
-            You should return= "jesus gonzalez arroja i jota ge punto es"
-
-        The provided email snippet: "$email"
-        EOT;
+            You are an advanced email transcription proofreader.
+            Your task is to convert an email address into a format optimized for clear pronunciation in text-to-speech (TTS) systems.
+            
+            IMPORTANT:
+            - Do NOT invent, complete, or add any words not present in the original email.
+            - Only convert what is given, without altering or enhancing the content.
+            
+            Instructions:
+            - Replace symbols with their spoken equivalents:
+              - "@" → "arroba"
+              - ".com" → "punto com"
+              - "." → "punto"
+              - "_" → "guion bajo"
+              - And so on, for all standard characters used in emails.
+            - For uncommon domains or abbreviations (like .org, .es), spell them out: "o erre ge", "e ese", etc.
+            - Add spaces between name components to improve pronunciation when needed.
+            - If a word is not pronounceable or is an abbreviation, spell it letter by letter.
+            
+            Example Outputs:
+            - "ddominguez@airzonecontrol.com" → "de domínguez arroba airzone control punto com"
+            - "cielo_azul@cieloazul.org" → "cielo guion bajo azul arroba cielo azul punto o erre ge"
+            - "jesusgonzalez@ijg.es" → "jesus gonzalez arroba i jota ge punto e ese"
+            
+            Email to convert: "$email"
+            EOT;
+            
 
             $response = Prism::structured()
                 ->using(Provider::OpenAI, 'gpt-4o')
@@ -167,10 +168,9 @@ class CallController extends Controller
             'speechModel'   => 'googlev2_short',
             'speechTimeout' => '1',
         ]);
-
         $gather->say($email, [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
         Log::info("decimos email $email");
@@ -200,7 +200,7 @@ class CallController extends Controller
 
         $gather->say('Si, es correcto, si es correcto, si es correcto', [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
 
@@ -213,7 +213,6 @@ class CallController extends Controller
 
         $company =  strtolower($this->returnCompany());
         $response = new VoiceResponse();
-
         if (!empty($second)) {
             $company = strtolower($request->input('company_given'));
         } else {
@@ -238,7 +237,7 @@ class CallController extends Controller
 
         $gather->say($company, [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
         Log::info('decimos company');
@@ -261,9 +260,9 @@ class CallController extends Controller
             'speechTimeout' => '1',
         ]);
 
-        $gather->say('Si', [
+        $gather->say('Si, es correcto', [
             'language' => 'es-ES',
-            'voice' => 'Polly.Lucia-Neural',
+            'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
         Log::info('Hemos dicho si a company');
