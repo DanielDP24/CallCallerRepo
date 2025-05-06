@@ -34,8 +34,7 @@ class CallController extends Controller
 
         $response = new VoiceResponse();
 
-        // Introduce a delay of 8.5 seconds
-        sleep(10);
+        $response->pause(['length' => 10]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -53,9 +52,9 @@ class CallController extends Controller
         $gather->say($name, [
             'language' => 'es-ES',
             'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
-            'rate' => '1'
+            'rate' => '0.8'
         ]);
-        Log::info('Decimos el nombre' . $name);
+        Log::info('Decimos el nombre: ' . $name);
         return response($response)->header('Content-Type', 'text/xml');
     }
     public function SayYes(Request $request)
@@ -79,7 +78,7 @@ class CallController extends Controller
         $gather->say('Si, es correcto', [
             'language' => 'es-ES',
             'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
-            'rate' => '1'
+            'rate' => '0.8'
         ]);
 
         Log::info('hemos dicho si al nombre');
@@ -88,17 +87,17 @@ class CallController extends Controller
     }
     public function SayEmail(Request $request)
     {
-        $email =  strtolower($this->returnEmail());
+        //strtolower($this->returnEmail())
+        $email = "ffonseca@ffonseca.com";
         $this->DatabaseController->insertField('email_given', $email);
-
         file_put_contents($this->filePath, ' - ' . $email . "\n", FILE_APPEND);
+    
         $second = $request->input('second') ?? '';
-
-        //si está lleno 
+    
         if (!empty($second)) {
-            $email = strtolower($request->input('email_given'));
+            // Usamos el email ya procesado
+            $finalEmail = strtolower($request->input('email_given'));
         } else {
-
             $schema = new ObjectSchema(
                 name: 'email_transcription',
                 description: 'Structured email transcription',
@@ -107,9 +106,7 @@ class CallController extends Controller
                 ],
                 requiredFields: ['readable_email']
             );
-
-            //LÓGICA DE CORECCIÓN DE EMAIL AI
-
+    
             $prompt = <<<EOT
             You are an advanced email transcription proofreader.
             Your task is to convert an email address into a format optimized for clear pronunciation in text-to-speech (TTS) systems.
@@ -136,24 +133,22 @@ class CallController extends Controller
             
             Email to convert: "$email"
             EOT;
-            
-
+    
             $response = Prism::structured()
                 ->using(Provider::OpenAI, 'gpt-4o')
                 ->withSchema($schema)
                 ->withPrompt($prompt)
                 ->asStructured();
-           
-
-            $email = $response->structured['readable_email'];
-            Log::info("decimos email $email XXXXXXXXXXXXXXXXXXXXX");
+    
+            $finalEmail = $response->structured['readable_email'];
+            Log::info("decimos email $finalEmail XXXXXXXXXXXXXXXXXXXXX");
 
         }
-
+    
 
         $response = new VoiceResponse();
 
-        $response->pause(['length' => 8.5]);
+        $response->pause(['length' => 8]);
 
         $gather = $response->gather([
             'input'         => 'speech',
@@ -171,8 +166,9 @@ class CallController extends Controller
         $gather->say($email, [
             'language' => 'es-ES',
             'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
-            'rate' => '1'
+            'rate' => '0.5'
         ]);
+        
         Log::info("decimos email $email");
 
         return response($response)->header('Content-Type', 'text/xml');
@@ -240,7 +236,7 @@ class CallController extends Controller
             'voice' => 'Google.es-ES-Chirp3-HD-Zephyr',
             'rate' => '1'
         ]);
-        Log::info('decimos company');
+        Log::info('decimos company ' . $company);
 
         return response($response)->header('Content-Type', 'text/xml');
     }

@@ -12,7 +12,7 @@ class MakeCallController extends Controller
     {
         $sid = config("services.twilio.sid");
         $token = config("services.twilio.token");
-        $uuid = uuid_create();
+       
         $twilio = new Client($sid, $token);
 
         $result =  $twilio->calls->create(
@@ -20,8 +20,8 @@ class MakeCallController extends Controller
             "+34951798775", //from
             "+34951794023", //to
             [
-                "url" => "http://54.247.29.41:8001/api/SayName?uuid=$uuid"
+                "url" => "http://54.247.29.41:8001/api/SayName",
+              //  "record" => true
             ]
         );
-        dd($result);
     }}

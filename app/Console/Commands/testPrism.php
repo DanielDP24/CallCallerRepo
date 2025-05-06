@@ -85,7 +85,7 @@ class testPrism extends Command
         ->withPrompt($prompt)
         ->asStructured();
 
-        $email = $response->structured['email'];
+        $email = $response;
     dd($email);
   }
 }
